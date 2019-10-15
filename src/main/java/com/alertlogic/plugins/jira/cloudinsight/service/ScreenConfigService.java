@@ -65,7 +65,6 @@ public class ScreenConfigService {
 	private String GROUP_CUSTOM_FIELD_NAME;
 	private static final Logger log = LoggerFactory.getLogger(ScreenConfigService.class);
 	private FieldConfigSchemeManager  fieldConfigSchemeManager;
-
 	private final IssueTypeManager issueTypeManager;
 
 	public ScreenConfigService(
@@ -101,7 +100,7 @@ public class ScreenConfigService {
 
 		if ( existField == null ) {
 		 	//Create a list of issue types for which the custom field needs to be available
-	        List<GenericValue> issueTypes = new ArrayList<GenericValue>();
+	        List<IssueType> issueTypes = new ArrayList<IssueType>();
 	        issueTypes.add(null);
 
 	        //Create a list of project contexts for which the custom field needs to be available
@@ -333,9 +332,12 @@ public class ScreenConfigService {
 
 		FieldManager fieldManager = ComponentAccessor.getFieldManager();
 
+		@SuppressWarnings("deprecation")
 		JiraContextTreeManager jiraContextTreeManager = new JiraContextTreeManager(ComponentAccessor.getProjectManager(), constantsManager);
+		@SuppressWarnings("deprecation")
 		List<JiraContextNode> contexts = CustomFieldUtils.buildJiraIssueContexts(false, null, new Long[]{project.getId()}, jiraContextTreeManager);
 
+		@SuppressWarnings("rawtypes")
 		ConfigurableField configurableField = fieldManager.getConfigurableField( IssueFieldConstants.ISSUE_TYPE);
 		fieldConfigScheme = fieldConfigSchemeManager.updateFieldConfigScheme( fieldConfigScheme, contexts, configurableField);
 
@@ -399,6 +401,7 @@ public class ScreenConfigService {
 			fieldsCreateScreen[5] = remediationItemCustomField.getId();//250 characters is the limit
 			fieldsCreateScreen[6] = remediationIdCustomField.getId();
 			fieldsCreateScreen[7] = groupCustomField.getId();
+			//fieldsCreateScreen[8] = IssueFieldConstants.CREATOR;
 
 		} catch (Exception e) {
 			e.printStackTrace();

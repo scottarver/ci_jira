@@ -7,7 +7,9 @@ var ruleConfigurationController;
  */
 AJS.$(document).ready(
 	function() {
-		Bootstrap.start(function(){
+		var currentUser = AJS.Meta.get('remote-user');
+
+		Bootstrap.start( currentUser, function(){
 			var self = ruleConfigurationController = this;
 			var environments = [];
 			var projects = [];
@@ -109,7 +111,7 @@ AJS.$(document).ready(
 				var rowData = [
 					{
 						header: "header-select",
-						data: "<input type='checkbox' name='rules' class='check-input' value='"
+						data: "<input type='checkbox' name='rules' value='"
 						+rule.id+"' onclick='ruleConfigurationController.validateSelected()'/>"
 					},
 					{
@@ -150,7 +152,7 @@ AJS.$(document).ready(
 					},
 					{
 						header: "header-edit",
-						data: "<a onclick='ruleConfigurationController.editRule("+rule.id+")'>Edit</a>"
+						data: "<a class='row_pointer' onclick='ruleConfigurationController.editRule("+rule.id+")'>Edit</a>"
 					}
 				];
 

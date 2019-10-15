@@ -41,11 +41,11 @@ public class RemediationsSyncServlet extends HttpServlet{
      */
     private void loadWebResources() {
     	String pluginKey = CommonJiraPluginUtils.getPluginKey(pluginRetrievalService);
-
     	pageBuilderService.assembler().resources().requireWebResource(pluginKey+":cloud-insight-for-jira-resources");
     	pageBuilderService.assembler().resources().requireWebResource(pluginKey+":ciServices");
     	pageBuilderService.assembler().resources().requireWebResource("com.atlassian.auiplugin:aui-select2");
     	pageBuilderService.assembler().resources().requireWebResource(pluginKey+":remediationsSyncController");
+    	pageBuilderService.assembler().resources().requireWebResource(pluginKey+":remediationSyncDetailsController");
     }
 
     @Override
@@ -62,16 +62,16 @@ public class RemediationsSyncServlet extends HttpServlet{
 
             resp.setContentType("text/html");
             Map<String, Object> context = Maps.newHashMap();
-            
+
             String ruleId = req.getParameter("ruleId");
             if(ruleId != null){
             	context.put("ruleId",ruleId);
             }
-            
+
             templateRenderer.render(VM_TEMPLATE, context, resp.getWriter());
     	}
     }
-    
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
     {

@@ -2,10 +2,10 @@
  * Explicit load of the controller, to be used
  * into a JIRA Panel.
  */
-function statusController() {
+function statusController( user ) {
 	AJS.$(document).ready(
 		function() {
-			Bootstrap.start(function(){
+			Bootstrap.start( user, function(){
 				var self = this;
 
 				var status = {
@@ -77,7 +77,7 @@ function statusController() {
                             }
                         }
 
-                        if ( status.ci === "disposed" || status.ci == "complete" || status.ci === "verified" ) {
+                        if ( status.ci === "disposed" || status.ci == "complete" ) {
                            if( status.jira != "Closed" && status.jira != "Resolved"){
                                 var transation = jiraService.Issue().doTransition( status.issueId, 'close', AJS.I18n.getText("ci.partials.statuspanel.js.msg.syncronize.close") );
 

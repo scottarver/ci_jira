@@ -29,9 +29,9 @@
 		<dependency>com.atlassian.auiplugin:aui-form-validation</dependency>
 		<dependency>com.atlassian.auiplugin:aui-select2</dependency>
 		<dependency>com.atlassian.auiplugin:dialog2</dependency>
-		<dependency>com.atlassian.auiplugin:ui-experimental-expander</dependency>
 		<dependency>jira.webresources:jquery-livestamp</dependency>
 		<resource type="download" name="cloud-insight-for-jira.css" location="/css/cloud-insight-for-jira.css" />
+		<resource type="download" name="cloud-insight-remediations-list.css" location="/css/cloud-insight-remediations-list.css" />
 		<resource type="download" name="images/" location="/images" />
 		<context>cloud-insight-for-jira</context>
 	</web-resource>
@@ -56,6 +56,7 @@
 		<description>
 		The module configuring the Active Objects service used by this plugin
 		</description>
+		<entity>com.alertlogic.plugins.jira.cloudinsight.entity.Credential</entity>
 		<entity>com.alertlogic.plugins.jira.cloudinsight.entity.PluginConfig</entity>
 		<entity>com.alertlogic.plugins.jira.cloudinsight.entity.Filter</entity>
 		<entity>com.alertlogic.plugins.jira.cloudinsight.entity.RuleConfig</entity>
@@ -131,7 +132,7 @@
 	</web-item>
 
 	<!-- Configuration of Servlets -->
-    <servlet name="ci.atlassianplugin.servlet.projectsetup.name" 
+    <servlet name="ci.atlassianplugin.servlet.projectsetup.name"
 		i18n-name-key="ci.atlassianplugin.servlet.projectsetup.name"
 		key="projectsetup-servlet-key"
 		class="com.alertlogic.plugins.jira.cloudinsight.servlet.SetupProjectServlet">
@@ -141,7 +142,7 @@
 		<url-pattern>/projectsetup</url-pattern>
 	</servlet>
 
-	<servlet name="ci.atlassianplugin.servlet.pluginconfiguration.name" 
+	<servlet name="ci.atlassianplugin.servlet.pluginconfiguration.name"
 		i18n-name-key="ci.atlassianplugin.servlet.pluginconfiguration.name"
 		key="plugin-configuration-servlet-key"
 		class="com.alertlogic.plugins.jira.cloudinsight.servlet.PluginConfigurationServlet">
@@ -149,6 +150,15 @@
 			Add-on configuration for connecting with Cloud Insight
 		</description>
 		<url-pattern>/pluginconfiguration</url-pattern>
+	</servlet>
+
+	<!-- Credentials servlet -->
+	<servlet name="ci.atlassianplugin.servlet.credential.name"
+		i18n-name-key="ci.atlassianplugin.servlet.credential.name"
+		key="credential-servlet-key"
+		class="com.alertlogic.plugins.jira.cloudinsight.servlet.CredentialServlet">
+		<description key="ci.atlassianplugin.servlet.credential.description"></description>
+		<url-pattern>/credentialservlet</url-pattern>
 	</servlet>
 
 	<!-- Remediations Sync Servlet Controls the Remediations Sync Page -->
@@ -190,6 +200,13 @@
         <url-pattern>/permissionservlet</url-pattern>
     </servlet>
 
+    <servlet name="Groups servlet"
+        i18n-name-key="ci.atlassianplugin.servlet.groups" key="groups-servlet"
+        class="com.alertlogic.plugins.jira.cloudinsight.servlet.JiraProxiGroupsServlet">
+        <description key="ci.atlassianplugin.servlet.groups.description">Groups servlet</description>
+        <url-pattern>/groupsservlet</url-pattern>
+    </servlet>
+
 	<!-- JS Services -->
     <web-resource key="ciServices" name="CIServices" >
         <dependency>com.atlassian.auiplugin:aui-select2</dependency>
@@ -212,7 +229,8 @@
         <resource type="download" name="RemediationSupportService.js"   location="/js/services/RemediationSupportService.js" />
         <resource type="download" name="AssetsService.js"               location="/js/services/AssetsService.js" />
         <resource type="download" name="RulesService.js"                location="/js/services/RulesService.js" />
-        <resource type="download" name="PermissionsService.js"              location="/js/services/PermissionsService.js" />
+        <resource type="download" name="PermissionsService.js"          location="/js/services/PermissionsService.js" />
+        <resource type="download" name="CredentialsService.js"          location="/js/services/CredentialsService.js" />
         <resource type="download" name="cloud-insight-for-jira.css" 	location="/css/cloud-insight-for-jira.css" />
     </web-resource>
 
@@ -222,7 +240,6 @@
         <transformation extension="js">
             <transformer key="jsI18n"/>
         </transformation>
-        <condition class="com.alertlogic.plugins.jira.cloudinsight.conditions.CloudInsightPluginHasConfigCondition"/>
     </web-resource>
 
     <!-- Remediation Details Servlet -->
@@ -250,16 +267,14 @@
             <transformer key="jsI18n"/>
         </transformation>
     	<resource type="download" name="DisposeController.js" location="/js/partials/Dispose/DisposeController.js"/>
-    	<condition class="com.alertlogic.plugins.jira.cloudinsight.conditions.CloudInsightPluginHasConfigCondition"/>
   	</web-resource>
 
-  	<web-resource name="StatusPanelController" key="StatusPanelController">
+  	<web-resource name="StatusPanelController" key="statusPanelController">
     	<context>atl.general</context>
     	<transformation extension="js">
             <transformer key="jsI18n"/>
         </transformation>
     	<resource type="download" name="StatusPanelController.js" location="/js/partials/StatusPanel/StatusPanelController.js"/>
-    	<condition class="com.alertlogic.plugins.jira.cloudinsight.conditions.CloudInsightPluginHasConfigCondition"/>
   	</web-resource>
 
   	<web-resource key="ruleConfigurationController" name="RuleConfigurationController" >
@@ -288,6 +303,10 @@
 
 	<component key="permission-configuration-service" name="Permission Configuration Service" class="com.alertlogic.plugins.jira.cloudinsight.service.PermissionService" />
 
+	<component key="credential-configuration-service" name="Credential Service" class="com.alertlogic.plugins.jira.cloudinsight.service.CredentialService" />
+
+	<component key="rest-util" name="Utility Service" class="com.alertlogic.plugins.jira.cloudinsight.util.RestUtil" />
+
 	<!-- Listeners -->
   	<component-import key="event-publisher" interface="com.atlassian.event.api.EventPublisher"/>
 
@@ -301,7 +320,6 @@
     	<conditions type="AND">
 		    <condition class="com.atlassian.jira.plugin.webfragment.conditions.IsIssueEditableCondition"/>
 		    <condition class="com.alertlogic.plugins.jira.cloudinsight.conditions.CloudInsightIssueCondition"/>
-		    <condition class="com.alertlogic.plugins.jira.cloudinsight.conditions.CloudInsightPluginHasConfigCondition"/>
 		    <condition class="com.alertlogic.plugins.jira.cloudinsight.conditions.CloudInsightUserHasPermissionCondition"/>
 		</conditions>
     	<link linkId="dispose_remediation">/plugins/servlet/disposeremediationservlet?id=${issue.id}</link>
@@ -313,7 +331,6 @@
     	<conditions type="AND">
 		    <condition class="com.atlassian.jira.plugin.webfragment.conditions.IsIssueEditableCondition"/>
 		    <condition class="com.alertlogic.plugins.jira.cloudinsight.conditions.CloudInsightIssueCondition"/>
-		    <condition class="com.alertlogic.plugins.jira.cloudinsight.conditions.CloudInsightPluginHasConfigCondition"/>
 		</conditions>
     	<link linkId="remediation_details_link">/plugins/servlet/remediationdetailsservlet?id=${issue.id}
     	</link>
@@ -328,7 +345,7 @@
         </transformation>
 
         <resource type="download" name="CustomProjectTemplate.soy.js" location="/js/partials/Project/CustomProjectTemplate.soy"/>
-
+        
         <resource type="download" name="images/" location="/images">
             <param name="content-type" value="image/png; charset=binary"/>
         </resource>
@@ -337,15 +354,28 @@
         <context>atl.admin</context>
     </web-resource>
 
+	<web-resource key="font-awesome-resource" name="Font Awesome Resources">
+		<context>atl.general</context>
+		<context>atl.admin</context>
+		<resource type="download" name="font-awesome.css" location="assets/font-awesome/css/font-awesome.css" />
+	    <resource type="download" name="font-awesome.min.css" location="assets/font-awesome/css/font-awesome.min.css" />
+	    <resource type="download" name="FontAwesome.otf" location="/fonts/font-awesome/fonts/FontAwesome.otf"/>
+	    <resource type="download" name="fontawesome-webfont.eot" location="assets/font-awesome/fonts/fontawesome-webfont.eot"/>
+	    <resource type="download" name="fontawesome-webfont.svg" location="assets/font-awesome/fonts/fontawesome-webfont.svg"/>
+	    <resource type="download" name="fontawesome-webfont.ttf" location="assets/font-awesome/fonts/fontawesome-webfont.ttf"/>
+	    <resource type="download" name="fontawesome-webfont.woff" location="assets/font-awesome/fonts/fontawesome-webfont.woff"/>
+	    <resource type="download" name="fontawesome-webfont.woff2" location="assets/font-awesome/fonts/fontawesome-webfont.woff2"/>
+	</web-resource>
+
     <project-blueprint key="ci-project-template" weight="90">
         <label key="ci.atlassianplugin.project.template.name"/>
         <description key="ci.atlassianplugin.project.template.description"/>
         <longDescription key="ci.atlassianplugin.project.template.description.long"/>
-
+        <projectTypeKey>business</projectTypeKey>
         <infoPage soy-template="JIRA.Templates.ProjectTemplates.CI.renderCustomProjectTemplateExplanation" />
 
         <icon location="images/al-logo.png"/>
-        <backgroundIcon location="images/al-logo.png"/>
+		<backgroundIcon location="images/al-logo-background.png"/>
 
         <add-project>
             <hook class="com.alertlogic.plugins.jira.cloudinsight.util.CustomProjectAddProjectHook"/>
@@ -357,7 +387,6 @@
 		<resource name="view" type="velocity" location="/js/partials/StatusPanel/StatusPanel.vm"/>
 		<conditions type="AND">
 			<condition class="com.alertlogic.plugins.jira.cloudinsight.conditions.CloudInsightIssueCondition"/>
-			<condition class="com.alertlogic.plugins.jira.cloudinsight.conditions.CloudInsightPluginHasConfigCondition"/>
 		</conditions>
 	</web-panel>
 
@@ -367,7 +396,14 @@
             <transformer key="jsI18n"/>
         </transformation>
     	<resource type="download" name="RemediationDetailsController.js" location="/js/partials/RemediationDetails/RemediationDetailsController.js"/>
-    	<condition class="com.alertlogic.plugins.jira.cloudinsight.conditions.CloudInsightPluginHasConfigCondition"/>
+  	</web-resource>
+  	
+  	<web-resource name="RemediationSyncDetailsController" key="remediationSyncDetailsController">
+    	<context>atl.general</context>
+    	<transformation extension="js">
+            <transformer key="jsI18n"/>
+        </transformation>
+    	<resource type="download" name="RemediationSyncDetailsController.js" location="/js/partials/RemediationSync/RemediationSyncDetailsController.js"/>
   	</web-resource>
 
 </atlassian-plugin>
